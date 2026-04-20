@@ -1,7 +1,5 @@
-import type { Context } from "@netlify/functions";
-import { Resend } from "resend";
-
-export default async (req: Request, context: Context) => {
+// Netlify Function v2 (ES module)
+export default async (req: Request) => {
   // Only allow POST
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -10,7 +8,14 @@ export default async (req: Request, context: Context) => {
     });
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("RESEND_API_KEY is not set");
+    return new Response(JSON.stringify({ error: "Server configuration error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const { name, email, subject, message } = await req.json();
@@ -22,8 +27,25 @@ export default async (req: Request, context: Context) => {
       });
     }
 
+    // Use Resend REST API directly to avoid module bundling issues
+    const sendEmail = async (payload: object) => {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Resend API error: ${res.status} - ${err}`);
+      }
+      return res.json();
+    };
+
     // 1. Send notification to Uday
-    await resend.emails.send({
+    await sendEmail({
       from: "Portfolio Contact <onboarding@resend.dev>",
       to: "uday07894@gmail.com",
       subject: `New Message: ${subject || "No Subject"}`,
@@ -38,7 +60,7 @@ export default async (req: Request, context: Context) => {
     });
 
     // 2. Send thank you to the sender
-    await resend.emails.send({
+    await sendEmail({
       from: "Udaykumar Jewoor <onboarding@resend.dev>",
       to: email,
       subject: "Thanks for reaching out!",
@@ -55,9 +77,9 @@ export default async (req: Request, context: Context) => {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Email error:", error);
-    return new Response(JSON.stringify({ error: "Failed to send email" }), {
+    return new Response(JSON.stringify({ error: "Failed to send email", details: error?.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
