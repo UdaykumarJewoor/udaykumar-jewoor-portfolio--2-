@@ -18,7 +18,7 @@ export default function App() {
   });
 
   return (
-    <div className="relative" style={{ selectionBackground: 'var(--theme-selection)' }}>
+    <div className="relative">
       <div className="noise" />
       <CustomCursor />
       
