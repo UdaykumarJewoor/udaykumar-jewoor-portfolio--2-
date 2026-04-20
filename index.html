@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Udaykumar Jewoor — Full-Stack Engineer specializing in Backend Systems & AI Integration. Java, Spring Boot, React." />
+    <title>Udaykumar Jewoor | Full-Stack Engineer</title>
+    <script>
+      // Prevent flash of wrong theme — runs before any rendering
+      (function() {
+        var theme = localStorage.getItem('portfolio-theme');
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
